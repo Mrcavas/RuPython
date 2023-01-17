@@ -184,7 +184,7 @@ class CCallMakerVisitor(GrammarVisitor):
 
     def visit_StringLeaf(self, node: StringLeaf) -> FunctionCall:
         val = ast.literal_eval(node.value)
-        if re.match(r"[a-zA-Z_]\w*\Z", val):  # This is a keyword
+        if re.match(r"[a-zA-Z_а-яА-Я]\w*\Z", val):  # This is a keyword
             if node.value.endswith("'"):
                 return self.keyword_helper(val)
             else:
@@ -473,7 +473,7 @@ class CParserGenerator(ParserGenerator, GrammarVisitor):
     def _group_keywords_by_length(self) -> Dict[int, List[Tuple[str, int]]]:
         groups: Dict[int, List[Tuple[str, int]]] = {}
         for keyword_str, keyword_type in self.keywords.items():
-            length = len(keyword_str)
+            length = len(keyword_str.encode())
             if length in groups:
                 groups[length].append((keyword_str, keyword_type))
             else:
@@ -481,14 +481,15 @@ class CParserGenerator(ParserGenerator, GrammarVisitor):
         return groups
 
     def _setup_keywords(self) -> None:
-        n_keyword_lists = (
-            len(max(self.keywords.keys(), key=len)) + 1 if len(self.keywords) > 0 else 0
-        )
-        self.print(f"static const int n_keyword_lists = {n_keyword_lists};")
+        # n_keyword_lists = (
+        #     len(max(self.keywords.keys(), key=lambda s: len(s.encode()))) + 1 if len(self.keywords) > 0 else 0
+        # )
         groups = self._group_keywords_by_length()
+        num_groups = max(groups) + 1 if groups else 1
+        n_keyword_lists = num_groups
+        self.print(f"static const int n_keyword_lists = {n_keyword_lists};")
         self.print("static KeywordToken *reserved_keywords[] = {")
         with self.indent():
-            num_groups = max(groups) + 1 if groups else 1
             for keywords_length in range(num_groups):
                 if keywords_length not in groups.keys():
                     self.print("(KeywordToken[]) {{NULL, -1}},")
@@ -867,4 +868,6 @@ class CParserGenerator(ParserGenerator, GrammarVisitor):
         if name is not None:
             name = self.dedupe(name)
         return_type = call.return_type if node.type is None else node.type
+        if isinstance(node.item, Group) and return_type == None and name == "a":
+            return name, "Token *"
         return name, return_type

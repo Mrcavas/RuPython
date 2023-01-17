@@ -393,7 +393,7 @@ _PyPegen_expect_forced_token(Parser *p, int type, const char* expected) {
     }
     Token *t = p->tokens[p->mark];
     if (t->type != type) {
-        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(t, "expected '%s'", expected);
+        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(t, "t->type = %i, type = %i, expected '%s'", t->type, type, expected);
         return NULL;
     }
     p->mark += 1;

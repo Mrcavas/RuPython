@@ -35,7 +35,7 @@ iskeyword = frozenset(kwlist).__contains__
 issoftkeyword = frozenset(softkwlist).__contains__
 '''.lstrip()
 
-EXTRA_KEYWORDS = ["async", "await"]
+EXTRA_KEYWORDS = ["async", "await", "асинхр", "аждать"]
 
 
 def main() -> None:
@@ -46,11 +46,11 @@ def main() -> None:
         "grammar", type=str, help="The file with the grammar definition in PEG format"
     )
     parser.add_argument(
-        "tokens_file", type=argparse.FileType("r"), help="The file with the token definitions"
+        "tokens_file", type=argparse.FileType("r", encoding="utf-8"), help="The file with the token definitions"
     )
     parser.add_argument(
         "keyword_file",
-        type=argparse.FileType("w"),
+        type=argparse.FileType("w", encoding="utf-8"),
         help="The path to write the keyword definitions",
     )
     args = parser.parse_args()

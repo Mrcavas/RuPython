@@ -2961,6 +2961,13 @@ PyTypeObject PyZip_Type = {
     PyObject_GC_Del,                    /* tp_free */
 };
 
+PyDoc_STRVAR(rutest_doc, "тест");
+
+static PyObject * ru_test(PyObject *module) {
+    fprintf(stdout, "тест выполененненененененннен");
+
+    Py_RETURN_NONE;
+}
 
 static PyMethodDef builtin_methods[] = {
     {"__build_class__", _PyCFunction_CAST(builtin___build_class__),
@@ -3008,13 +3015,67 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_SORTED_METHODDEF
     BUILTIN_SUM_METHODDEF
     BUILTIN_VARS_METHODDEF
+    {"тест", _PyCFunction_CAST(ru_test), METH_NOARGS, rutest_doc},
     {NULL,              NULL},
 };
+
+#define Aliases(...) (const char *[]) {__VA_ARGS__, NULL}
+
+typedef struct {
+    const char *original;
+    const char **aliases;
+} Substitution;
+
+#define NUM_SUBS 3
+
+static Substitution substitutions[] = {
+    {"print", Aliases("вывести")},
+    {"all", Aliases("все", "всё")},
+    {NULL, { NULL }}
+};
+
 
 PyDoc_STRVAR(builtin_doc,
 "Built-in functions, exceptions, and other objects.\n\
 \n\
 Noteworthy: None is the `nil' object; Ellipsis represents `...' in slices.");
+
+static PyMethodDef *createSubstitutions(PyMethodDef *methods) {
+    setlocale();
+    PyMethodDef *subs = malloc(sizeof(PyMethodDef) * NUM_SUBS);
+    int sub_i = 0;
+    int methods_size = 0;
+
+    for (PyMethodDef *fdef = methods; fdef->ml_name != NULL; fdef++) {
+        for (int i = 0; substitutions[i].original != NULL; i++) {
+            if (substitutions[i].original == fdef->ml_name) {
+                for (int j = 0; substitutions[i].aliases[j] != NULL; j++) {
+                    PyMethodDef *sub = &subs[sub_i];
+                    memcpy(sub, fdef, sizeof(PyMethodDef));
+                    sub->ml_name = substitutions[i].aliases[j];
+                    sub_i++;
+                    printf("sub %s\n", sub->ml_name);
+                }
+            }
+        }
+        methods_size++;
+    }
+
+    // PyMethodDef *new_methods = malloc(sizeof(PyMethodDef) * (methods_size + NUM_SUBS));
+    // memcpy(new_methods, subs, sizeof(PyMethodDef) * NUM_SUBS);
+    // memcpy(&new_methods[NUM_SUBS], methods, sizeof(PyMethodDef) * methods_size);
+
+    // for (PyMethodDef *fdef = subs; fdef->ml_name != NULL; fdef++) {
+    //     fprintf(stdout, "subs: %s\n", fdef->ml_name);
+    // }
+
+    // for (PyMethodDef *fdef = new_methods; fdef->ml_name != NULL; fdef++) {
+    //     fprintf(stdout, "new: %s\n", fdef->ml_name);
+    // }
+
+    // return new_methods;
+    return methods;
+}
 
 static struct PyModuleDef builtinsmodule = {
     PyModuleDef_HEAD_INIT,
@@ -3035,6 +3096,8 @@ _PyBuiltin_Init(PyInterpreterState *interp)
     PyObject *mod, *dict, *debug;
 
     const PyConfig *config = _PyInterpreterState_GetConfig(interp);
+
+    builtinsmodule.m_methods = createSubstitutions(builtinsmodule.m_methods);
 
     mod = _PyModule_CreateInitialized(&builtinsmodule, PYTHON_API_VERSION);
     if (mod == NULL)

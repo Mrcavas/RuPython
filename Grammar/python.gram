@@ -113,26 +113,26 @@ simple_stmts[asdl_stmt_seq*]:
 simple_stmt[stmt_ty] (memo):
     | assignment
     | e=star_expressions { _PyAST_Expr(e, EXTRA) }
-    | &'return' return_stmt
-    | &('import' | 'from') import_stmt
-    | &'raise' raise_stmt
-    | 'pass' { _PyAST_Pass(EXTRA) }
-    | &'del' del_stmt
-    | &'yield' yield_stmt
-    | &'assert' assert_stmt
-    | 'break' { _PyAST_Break(EXTRA) }
-    | 'continue' { _PyAST_Continue(EXTRA) }
-    | &'global' global_stmt
-    | &'nonlocal' nonlocal_stmt
+    | &('return' | 'вернуть') return_stmt
+    | &(('import' | 'импортировать' | 'импорт') | ('from' | 'из')) import_stmt
+    | &('raise' | 'кинуть') raise_stmt
+    | ('pass' | 'пас') { _PyAST_Pass(EXTRA) }
+    | &('del' | 'удал') del_stmt
+    | &('yield' | 'выдать') yield_stmt
+    | &('assert' | 'утвердить') assert_stmt
+    | ('break' | 'выйти') { _PyAST_Break(EXTRA) }
+    | ('continue' | 'продолжить') { _PyAST_Continue(EXTRA) }
+    | &('global' | 'глобальное' | 'глобальные') global_stmt
+    | &('nonlocal' | 'нелокальное' | 'нелокальные') nonlocal_stmt
 
 compound_stmt[stmt_ty]:
-    | &('def' | '@' | ASYNC) function_def
-    | &'if' if_stmt
-    | &('class' | '@') class_def
-    | &('with' | ASYNC) with_stmt
-    | &('for' | ASYNC) for_stmt
-    | &'try' try_stmt
-    | &'while' while_stmt
+    | &('def' | 'опр' | 'зад' | '@' | ASYNC) function_def
+    | &('if' | 'если') if_stmt
+    | &(('class' | 'класс') | '@') class_def
+    | &(('with' | 'с') | ASYNC) with_stmt
+    | &(('for' | 'для') | ASYNC) for_stmt
+    | &('try' | 'попробовать') try_stmt
+    | &('while' | 'пока') while_stmt
     | match_stmt
 
 # SIMPLE STATEMENTS
@@ -174,25 +174,25 @@ augassign[AugOperator*]:
     | '//=' { _PyPegen_augoperator(p, FloorDiv) }
 
 return_stmt[stmt_ty]:
-    | 'return' a=[star_expressions] { _PyAST_Return(a, EXTRA) }
+    | ('return' | 'вернуть') a=[star_expressions] { _PyAST_Return(a, EXTRA) }
 
 raise_stmt[stmt_ty]:
-    | 'raise' a=expression b=['from' z=expression { z }] { _PyAST_Raise(a, b, EXTRA) }
-    | 'raise' { _PyAST_Raise(NULL, NULL, EXTRA) }
+    | ('raise' | 'кинуть') a=expression b=[('from' | 'из') z=expression { z }] { _PyAST_Raise(a, b, EXTRA) }
+    | ('raise' | 'кинуть') { _PyAST_Raise(NULL, NULL, EXTRA) }
 
-global_stmt[stmt_ty]: 'global' a[asdl_expr_seq*]=','.NAME+ {
+global_stmt[stmt_ty]: ('global' | 'глобальное' | 'глобальные') a[asdl_expr_seq*]=','.NAME+ {
     _PyAST_Global(CHECK(asdl_identifier_seq*, _PyPegen_map_names_to_ids(p, a)), EXTRA) }
 
-nonlocal_stmt[stmt_ty]: 'nonlocal' a[asdl_expr_seq*]=','.NAME+ {
+nonlocal_stmt[stmt_ty]: ('nonlocal' | 'нелокальное' | 'нелокальные') a[asdl_expr_seq*]=','.NAME+ {
     _PyAST_Nonlocal(CHECK(asdl_identifier_seq*, _PyPegen_map_names_to_ids(p, a)), EXTRA) }
 
 del_stmt[stmt_ty]:
-    | 'del' a=del_targets &(';' | NEWLINE) { _PyAST_Delete(a, EXTRA) }
+    | ('del' | 'удал') a=del_targets &(';' | NEWLINE) { _PyAST_Delete(a, EXTRA) }
     | invalid_del_stmt
 
 yield_stmt[stmt_ty]: y=yield_expr { _PyAST_Expr(y, EXTRA) }
 
-assert_stmt[stmt_ty]: 'assert' a=expression b=[',' z=expression { z }] { _PyAST_Assert(a, b, EXTRA) }
+assert_stmt[stmt_ty]: ('assert' | 'утвердить') a=expression b=[',' z=expression { z }] { _PyAST_Assert(a, b, EXTRA) }
 
 import_stmt[stmt_ty]: 
     | invalid_import
@@ -202,12 +202,12 @@ import_stmt[stmt_ty]:
 # Import statements
 # -----------------
 
-import_name[stmt_ty]: 'import' a=dotted_as_names { _PyAST_Import(a, EXTRA) }
+import_name[stmt_ty]: ('import' | 'импортировать' | 'импорт') a=dotted_as_names { _PyAST_Import(a, EXTRA) }
 # note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
 import_from[stmt_ty]:
-    | 'from' a=('.' | '...')* b=dotted_name 'import' c=import_from_targets {
+    | ('from' | 'из') a=('.' | '...')* b=dotted_name ('import' | 'импортировать' | 'импорт') c=import_from_targets {
         _PyAST_ImportFrom(b->v.Name.id, c, _PyPegen_seq_count_dots(a), EXTRA) }
-    | 'from' a=('.' | '...')+ 'import' b=import_from_targets {
+    | ('from' | 'из') a=('.' | '...')+ ('import' | 'импортировать' | 'импорт') b=import_from_targets {
         _PyAST_ImportFrom(NULL, b, _PyPegen_seq_count_dots(a), EXTRA) }
 import_from_targets[asdl_alias_seq*]:
     | '(' a=import_from_as_names [','] ')' { a }
@@ -217,13 +217,13 @@ import_from_targets[asdl_alias_seq*]:
 import_from_as_names[asdl_alias_seq*]:
     | a[asdl_alias_seq*]=','.import_from_as_name+ { a }
 import_from_as_name[alias_ty]:
-    | a=NAME b=['as' z=NAME { z }] { _PyAST_alias(a->v.Name.id,
+    | a=NAME b=[('as' | 'как') z=NAME { z }] { _PyAST_alias(a->v.Name.id,
                                                (b) ? ((expr_ty) b)->v.Name.id : NULL,
                                                EXTRA) }
 dotted_as_names[asdl_alias_seq*]:
     | a[asdl_alias_seq*]=','.dotted_as_name+ { a }
 dotted_as_name[alias_ty]:
-    | a=dotted_name b=['as' z=NAME { z }] { _PyAST_alias(a->v.Name.id,
+    | a=dotted_name b=[('as' | 'как') z=NAME { z }] { _PyAST_alias(a->v.Name.id,
                                                       (b) ? ((expr_ty) b)->v.Name.id : NULL,
                                                       EXTRA) }
 dotted_name[expr_ty]:
@@ -252,7 +252,7 @@ class_def[stmt_ty]:
 
 class_def_raw[stmt_ty]:
     | invalid_class_def_raw
-    | 'class' a=NAME b=['(' z=[arguments] ')' { z }] ':' c=block {
+    | ('class' | 'класс') a=NAME b=['(' z=[arguments] ')' { z }] ':' c=block {
         _PyAST_ClassDef(a->v.Name.id,
                      (b) ? ((expr_ty) b)->v.Call.args : NULL,
                      (b) ? ((expr_ty) b)->v.Call.keywords : NULL,
@@ -267,11 +267,11 @@ function_def[stmt_ty]:
 
 function_def_raw[stmt_ty]:
     | invalid_def_raw
-    | 'def' n=NAME &&'(' params=[params] ')' a=['->' z=expression { z }] &&':' tc=[func_type_comment] b=block {
+    | ('def' | 'опр' | 'зад') n=NAME &&'(' params=[params] ')' a=['->' z=expression { z }] &&':' tc=[func_type_comment] b=block {
         _PyAST_FunctionDef(n->v.Name.id,
                         (params) ? params : CHECK(arguments_ty, _PyPegen_empty_arguments(p)),
                         b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA) }
-    | ASYNC 'def' n=NAME &&'(' params=[params] ')' a=['->' z=expression { z }] &&':' tc=[func_type_comment] b=block {
+    | ASYNC ('def' | 'опр' | 'зад') n=NAME &&'(' params=[params] ')' a=['->' z=expression { z }] &&':' tc=[func_type_comment] b=block {
         CHECK_VERSION(
             stmt_ty,
             5,
@@ -358,33 +358,33 @@ default[expr_ty]: '=' a=expression { a } | invalid_default
 
 if_stmt[stmt_ty]:
     | invalid_if_stmt
-    | 'if' a=named_expression ':' b=block c=elif_stmt {
+    | ('if' | 'если') a=named_expression ':' b=block c=elif_stmt {
         _PyAST_If(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-    | 'if' a=named_expression ':' b=block c=[else_block] { _PyAST_If(a, b, c, EXTRA) }
+    | ('if' | 'если') a=named_expression ':' b=block c=[else_block] { _PyAST_If(a, b, c, EXTRA) }
 elif_stmt[stmt_ty]:
     | invalid_elif_stmt
-    | 'elif' a=named_expression ':' b=block c=elif_stmt {
+    | ('elif' | 'инесли') a=named_expression ':' b=block c=elif_stmt {
         _PyAST_If(a, b, CHECK(asdl_stmt_seq*, _PyPegen_singleton_seq(p, c)), EXTRA) }
-    | 'elif' a=named_expression ':' b=block c=[else_block] { _PyAST_If(a, b, c, EXTRA) }
+    | ('elif' | 'инесли') a=named_expression ':' b=block c=[else_block] { _PyAST_If(a, b, c, EXTRA) }
 else_block[asdl_stmt_seq*]:
     | invalid_else_stmt
-    | 'else' &&':' b=block { b }
+    | ('else' | 'иначе') &&':' b=block { b }
 
 # While statement
 # ---------------
 
 while_stmt[stmt_ty]:
     | invalid_while_stmt
-    | 'while' a=named_expression ':' b=block c=[else_block] { _PyAST_While(a, b, c, EXTRA) }
+    | ('while' | 'пока') a=named_expression ':' b=block c=[else_block] { _PyAST_While(a, b, c, EXTRA) }
 
 # For statement
 # -------------
 
 for_stmt[stmt_ty]:
     | invalid_for_stmt
-    | 'for' t=star_targets 'in' ~ ex=star_expressions ':' tc=[TYPE_COMMENT] b=block el=[else_block] {
+    | ('for' | 'для') t=star_targets ('in' | 'в') ~ ex=star_expressions ':' tc=[TYPE_COMMENT] b=block el=[else_block] {
         _PyAST_For(t, ex, b, el, NEW_TYPE_COMMENT(p, tc), EXTRA) }
-    | ASYNC 'for' t=star_targets 'in' ~ ex=star_expressions ':' tc=[TYPE_COMMENT] b=block el=[else_block] {
+    | ASYNC ('for' | 'для') t=star_targets ('in' | 'в') ~ ex=star_expressions ':' tc=[TYPE_COMMENT] b=block el=[else_block] {
         CHECK_VERSION(stmt_ty, 5, "Async for loops are", _PyAST_AsyncFor(t, ex, b, el, NEW_TYPE_COMMENT(p, tc), EXTRA)) }
     | invalid_for_target
 
@@ -393,18 +393,18 @@ for_stmt[stmt_ty]:
 
 with_stmt[stmt_ty]:
     | invalid_with_stmt_indent
-    | 'with' '(' a[asdl_withitem_seq*]=','.with_item+ ','? ')' ':' b=block {
+    | ('with' | 'с') '(' a[asdl_withitem_seq*]=','.with_item+ ','? ')' ':' b=block {
         CHECK_VERSION(stmt_ty, 9, "Parenthesized context managers are", _PyAST_With(a, b, NULL, EXTRA)) }
-    | 'with' a[asdl_withitem_seq*]=','.with_item+ ':' tc=[TYPE_COMMENT] b=block {
+    | ('with' | 'с') a[asdl_withitem_seq*]=','.with_item+ ':' tc=[TYPE_COMMENT] b=block {
         _PyAST_With(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA) }
-    | ASYNC 'with' '(' a[asdl_withitem_seq*]=','.with_item+ ','? ')' ':' b=block {
+    | ASYNC ('with' | 'с') '(' a[asdl_withitem_seq*]=','.with_item+ ','? ')' ':' b=block {
        CHECK_VERSION(stmt_ty, 5, "Async with statements are", _PyAST_AsyncWith(a, b, NULL, EXTRA)) }
-    | ASYNC 'with' a[asdl_withitem_seq*]=','.with_item+ ':' tc=[TYPE_COMMENT] b=block {
+    | ASYNC ('with' | 'с') a[asdl_withitem_seq*]=','.with_item+ ':' tc=[TYPE_COMMENT] b=block {
        CHECK_VERSION(stmt_ty, 5, "Async with statements are", _PyAST_AsyncWith(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA)) }
     | invalid_with_stmt
 
 with_item[withitem_ty]:
-    | e=expression 'as' t=star_target &(',' | ')' | ':') { _PyAST_withitem(e, t, p->arena) }
+    | e=expression ('as' | 'как') t=star_target &(',' | ')' | ':') { _PyAST_withitem(e, t, p->arena) }
     | invalid_with_item
     | e=expression { _PyAST_withitem(e, NULL, p->arena) }
 
@@ -413,9 +413,9 @@ with_item[withitem_ty]:
 
 try_stmt[stmt_ty]:
     | invalid_try_stmt
-    | 'try' &&':' b=block f=finally_block { _PyAST_Try(b, NULL, NULL, f, EXTRA) }
-    | 'try' &&':' b=block ex[asdl_excepthandler_seq*]=except_block+ el=[else_block] f=[finally_block] { _PyAST_Try(b, ex, el, f, EXTRA) }
-    | 'try' &&':' b=block ex[asdl_excepthandler_seq*]=except_star_block+ el=[else_block] f=[finally_block] { 
+    | ('try' | 'попробовать') &&':' b=block f=finally_block { _PyAST_Try(b, NULL, NULL, f, EXTRA) }
+    | ('try' | 'попробовать') &&':' b=block ex[asdl_excepthandler_seq*]=except_block+ el=[else_block] f=[finally_block] { _PyAST_Try(b, ex, el, f, EXTRA) }
+    | ('try' | 'попробовать') &&':' b=block ex[asdl_excepthandler_seq*]=except_star_block+ el=[else_block] f=[finally_block] { 
         CHECK_VERSION(stmt_ty, 11, "Exception groups are", 
                       _PyAST_TryStar(b, ex, el, f, EXTRA)) }
 
@@ -425,24 +425,24 @@ try_stmt[stmt_ty]:
 
 except_block[excepthandler_ty]:
     | invalid_except_stmt_indent
-    | 'except' e=expression t=['as' z=NAME { z }] ':' b=block {
+    | ('except' | 'однако') e=expression t=[('as' | 'как') z=NAME { z }] ':' b=block {
         _PyAST_ExceptHandler(e, (t) ? ((expr_ty) t)->v.Name.id : NULL, b, EXTRA) }
-    | 'except' ':' b=block { _PyAST_ExceptHandler(NULL, NULL, b, EXTRA) }
+    | ('except' | 'однако') ':' b=block { _PyAST_ExceptHandler(NULL, NULL, b, EXTRA) }
     | invalid_except_stmt
 except_star_block[excepthandler_ty]:
     | invalid_except_star_stmt_indent
-    | 'except' '*' e=expression t=['as' z=NAME { z }] ':' b=block {
+    | ('except' | 'однако') '*' e=expression t=[('as' | 'как') z=NAME { z }] ':' b=block {
         _PyAST_ExceptHandler(e, (t) ? ((expr_ty) t)->v.Name.id : NULL, b, EXTRA) }
     | invalid_except_stmt
 finally_block[asdl_stmt_seq*]:
     | invalid_finally_stmt
-    | 'finally' &&':' a=block { a }
+    | ('finally' | 'наконец') &&':' a=block { a }
 
 # Match statement
 # ---------------
 
 match_stmt[stmt_ty]:
-    | "match" subject=subject_expr ':' NEWLINE INDENT cases[asdl_match_case_seq*]=case_block+ DEDENT {
+    | ("match" | "соотнести") subject=subject_expr ':' NEWLINE INDENT cases[asdl_match_case_seq*]=case_block+ DEDENT {
         CHECK_VERSION(stmt_ty, 10, "Pattern matching is", _PyAST_Match(subject, cases, EXTRA)) }
     | invalid_match_stmt
 
@@ -453,10 +453,10 @@ subject_expr[expr_ty]:
 
 case_block[match_case_ty]:
     | invalid_case_block
-    | "case" pattern=patterns guard=guard? ':' body=block {
+    | ("case" | "случай") pattern=patterns guard=guard? ':' body=block {
         _PyAST_match_case(pattern, guard, body, p->arena) }
 
-guard[expr_ty]: 'if' guard=named_expression { guard }
+guard[expr_ty]: ('if' | 'если') guard=named_expression { guard }
 
 patterns[pattern_ty]:
     | patterns[asdl_pattern_seq*]=open_sequence_pattern {
@@ -468,7 +468,7 @@ pattern[pattern_ty]:
     | or_pattern
 
 as_pattern[pattern_ty]:
-    | pattern=or_pattern 'as' target=pattern_capture_target {
+    | pattern=or_pattern ('as' | 'как') target=pattern_capture_target {
         _PyAST_MatchAs(pattern, target->v.Name.id, EXTRA) }
     | invalid_as_pattern
 
@@ -491,18 +491,18 @@ literal_pattern[pattern_ty]:
     | value=signed_number !('+' | '-') { _PyAST_MatchValue(value, EXTRA) }
     | value=complex_number { _PyAST_MatchValue(value, EXTRA) }
     | value=strings { _PyAST_MatchValue(value, EXTRA) }
-    | 'None' { _PyAST_MatchSingleton(Py_None, EXTRA) }
-    | 'True' { _PyAST_MatchSingleton(Py_True, EXTRA) }
-    | 'False' { _PyAST_MatchSingleton(Py_False, EXTRA) }
+    | ('None' | 'Ничего') { _PyAST_MatchSingleton(Py_None, EXTRA) }
+    | ('True' | 'Правда') { _PyAST_MatchSingleton(Py_True, EXTRA) }
+    | ('False' | 'Ложь') { _PyAST_MatchSingleton(Py_False, EXTRA) }
 
 # Literal expressions are used to restrict permitted mapping pattern keys
 literal_expr[expr_ty]:
     | signed_number !('+' | '-')
     | complex_number
     | strings
-    | 'None' { _PyAST_Constant(Py_None, NULL, EXTRA) }
-    | 'True' { _PyAST_Constant(Py_True, NULL, EXTRA) }
-    | 'False' { _PyAST_Constant(Py_False, NULL, EXTRA) }
+    | ('None' | 'Ничего') { _PyAST_Constant(Py_None, NULL, EXTRA) }
+    | ('True' | 'Правда') { _PyAST_Constant(Py_True, NULL, EXTRA) }
+    | ('False' | 'Ложь') { _PyAST_Constant(Py_False, NULL, EXTRA) }
 
 complex_number[expr_ty]:
     | real=signed_real_number '+' imag=imaginary_number {
@@ -640,13 +640,13 @@ expressions[expr_ty]:
 expression[expr_ty] (memo):
     | invalid_expression
     | invalid_legacy_expression
-    | a=disjunction 'if' b=disjunction 'else' c=expression { _PyAST_IfExp(b, a, c, EXTRA) }
+    | a=disjunction ('if' | 'если') b=disjunction ('else' | 'иначе') c=expression { _PyAST_IfExp(b, a, c, EXTRA) }
     | disjunction
     | lambdef
 
 yield_expr[expr_ty]:
-    | 'yield' 'from' a=expression { _PyAST_YieldFrom(a, EXTRA) }
-    | 'yield' a=[star_expressions] { _PyAST_Yield(a, EXTRA) }
+    | ('yield' | 'выдать') ('from' | 'из') a=expression { _PyAST_YieldFrom(a, EXTRA) }
+    | ('yield' | 'выдать') a=[star_expressions] { _PyAST_Yield(a, EXTRA) }
 
 star_expressions[expr_ty]:
     | a=star_expression b=(',' c=star_expression { c })+ [','] {
@@ -675,21 +675,21 @@ named_expression[expr_ty]:
     | expression !':='
 
 disjunction[expr_ty] (memo):
-    | a=conjunction b=('or' c=conjunction { c })+ { _PyAST_BoolOp(
+    | a=conjunction b=(('or' | 'или') c=conjunction { c })+ { _PyAST_BoolOp(
         Or,
         CHECK(asdl_expr_seq*, _PyPegen_seq_insert_in_front(p, a, b)),
         EXTRA) }
     | conjunction
 
 conjunction[expr_ty] (memo):
-    | a=inversion b=('and' c=inversion { c })+ { _PyAST_BoolOp(
+    | a=inversion b=(('and' | 'и') c=inversion { c })+ { _PyAST_BoolOp(
         And,
         CHECK(asdl_expr_seq*, _PyPegen_seq_insert_in_front(p, a, b)),
         EXTRA) }
     | inversion
 
 inversion[expr_ty] (memo):
-    | 'not' a=inversion { _PyAST_UnaryOp(Not, a, EXTRA) }
+    | ('not' | 'не') a=inversion { _PyAST_UnaryOp(Not, a, EXTRA) }
     | comparison
 
 # Comparison operators
@@ -723,10 +723,10 @@ lte_bitwise_or[CmpopExprPair*]: '<=' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, 
 lt_bitwise_or[CmpopExprPair*]: '<' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, Lt, a) }
 gte_bitwise_or[CmpopExprPair*]: '>=' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, GtE, a) }
 gt_bitwise_or[CmpopExprPair*]: '>' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, Gt, a) }
-notin_bitwise_or[CmpopExprPair*]: 'not' 'in' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, NotIn, a) }
-in_bitwise_or[CmpopExprPair*]: 'in' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, In, a) }
-isnot_bitwise_or[CmpopExprPair*]: 'is' 'not' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, IsNot, a) }
-is_bitwise_or[CmpopExprPair*]: 'is' a=bitwise_or { _PyPegen_cmpop_expr_pair(p, Is, a) }
+notin_bitwise_or[CmpopExprPair*]: ('not' | 'не') ('in' | 'в') a=bitwise_or { _PyPegen_cmpop_expr_pair(p, NotIn, a) }
+in_bitwise_or[CmpopExprPair*]: ('in' | 'в') a=bitwise_or { _PyPegen_cmpop_expr_pair(p, In, a) }
+isnot_bitwise_or[CmpopExprPair*]: ('is' | 'это') ('not' | 'не') a=bitwise_or { _PyPegen_cmpop_expr_pair(p, IsNot, a) }
+is_bitwise_or[CmpopExprPair*]: ('is' | 'это') a=bitwise_or { _PyPegen_cmpop_expr_pair(p, Is, a) }
 
 # Bitwise operators
 # -----------------
@@ -804,9 +804,9 @@ slice[expr_ty]:
 
 atom[expr_ty]:
     | NAME
-    | 'True' { _PyAST_Constant(Py_True, NULL, EXTRA) }
-    | 'False' { _PyAST_Constant(Py_False, NULL, EXTRA) }
-    | 'None' { _PyAST_Constant(Py_None, NULL, EXTRA) }
+    | ('True' | 'Правда') { _PyAST_Constant(Py_True, NULL, EXTRA) }
+    | ('False' | 'Ложь') { _PyAST_Constant(Py_False, NULL, EXTRA) }
+    | ('None' | 'Ничего') { _PyAST_Constant(Py_None, NULL, EXTRA) }
     | &STRING strings
     | NUMBER
     | &'(' (tuple | group | genexp)
@@ -822,7 +822,7 @@ group[expr_ty]:
 # ----------------
 
 lambdef[expr_ty]:
-    | 'lambda' a=[lambda_params] ':' b=expression {
+    | ('lambda' | 'лямбда') a=[lambda_params] ':' b=expression {
         _PyAST_Lambda((a) ? a : CHECK(arguments_ty, _PyPegen_empty_arguments(p)), b, EXTRA) }
 
 lambda_params[arguments_ty]:
@@ -914,9 +914,9 @@ for_if_clauses[asdl_comprehension_seq*]:
     | a[asdl_comprehension_seq*]=for_if_clause+ { a }
 
 for_if_clause[comprehension_ty]:
-    | ASYNC 'for' a=star_targets 'in' ~ b=disjunction c[asdl_expr_seq*]=('if' z=disjunction { z })* {
+    | ASYNC ('for' | 'для') a=star_targets ('in' | 'в') ~ b=disjunction c[asdl_expr_seq*]=(('if' | 'если') z=disjunction { z })* {
         CHECK_VERSION(comprehension_ty, 6, "Async comprehensions are", _PyAST_comprehension(a, b, c, 1, p->arena)) }
-    | 'for' a=star_targets 'in' ~ b=disjunction c[asdl_expr_seq*]=('if' z=disjunction { z })* {
+    | ('for' | 'для') a=star_targets ('in' | 'в') ~ b=disjunction c[asdl_expr_seq*]=(('if' | 'если') z=disjunction { z })* {
         _PyAST_comprehension(a, b, c, 0, p->arena) }
     | invalid_for_target
 
@@ -1091,7 +1091,7 @@ invalid_arguments:
         RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, _PyPegen_get_last_comprehension_item(PyPegen_last_item(b, comprehension_ty)), "Generator expression must be parenthesized") }
     | a=args ',' args { _PyPegen_arguments_parsing_error(p, a) }
 invalid_kwarg:
-    | a[Token*]=('True'|'False'|'None') b='=' {
+    | a[Token*]=(('True' | 'Правда')|('False' | 'Ложь')|('None' | 'Ничего')) b='=' {
         RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot assign to %s", PyBytes_AS_STRING(a->bytes)) }
     | a=NAME b='=' expression for_if_clauses {
         RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?")}
@@ -1103,7 +1103,7 @@ invalid_kwarg:
 
 # IMPORTANT: Note that the "_without_invalid" suffix causes the rule to not call invalid rules under it
 expression_without_invalid[expr_ty]:
-    | a=disjunction 'if' b=disjunction 'else' c=expression { _PyAST_IfExp(b, a, c, EXTRA) }
+    | a=disjunction ('if' | 'если') b=disjunction ('else' | 'иначе') c=expression { _PyAST_IfExp(b, a, c, EXTRA) }
     | disjunction
     | lambdef
 invalid_legacy_expression:
@@ -1117,7 +1117,7 @@ invalid_expression:
    | !(NAME STRING | SOFT_KEYWORD) a=disjunction b=expression_without_invalid {
         _PyPegen_check_legacy_stmt(p, a) ? NULL : p->tokens[p->mark-1]->level == 0 ? NULL :
         RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Perhaps you forgot a comma?") }
-   | a=disjunction 'if' b=disjunction !('else'|':') { RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "expected 'else' after 'if' expression") }
+   | a=disjunction ('if' | 'если') b=disjunction !(('else' | 'иначе')|':') { RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "expected ('else' | 'иначе') after ('if' | 'если') expression") }
 
 invalid_named_expression(memo):
     | a=expression ':=' expression {
@@ -1125,7 +1125,7 @@ invalid_named_expression(memo):
             a, "cannot use assignment expressions with %s", _PyPegen_get_expr_name(a)) }
     | a=NAME '=' b=bitwise_or !('='|':=') {
         RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "invalid syntax. Maybe you meant '==' or ':=' instead of '='?") }
-    | !(list|tuple|genexp|'True'|'None'|'False') a=bitwise_or b='=' bitwise_or !('='|':=') {
+    | !(list|tuple|genexp|('True' | 'Правда')|('None' | 'Ничего')|('False' | 'Ложь')) a=bitwise_or b='=' bitwise_or !('='|':=') {
         RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot assign to %s here. Maybe you meant '==' instead of '='?",
                                           _PyPegen_get_expr_name(a)) }
 
@@ -1154,7 +1154,7 @@ invalid_ann_assign_target[expr_ty]:
     | tuple
     | '(' a=invalid_ann_assign_target ')' { a }
 invalid_del_stmt:
-    | 'del' a=star_expressions {
+    | ('del' | 'удал') a=star_expressions {
         RAISE_SYNTAX_ERROR_INVALID_TARGET(DEL_TARGETS, a) }
 invalid_block:
     | NEWLINE !INDENT { RAISE_INDENTATION_ERROR("expected an indented block") }
@@ -1226,11 +1226,11 @@ invalid_double_type_comments:
     | TYPE_COMMENT NEWLINE TYPE_COMMENT NEWLINE INDENT {
         RAISE_SYNTAX_ERROR("Cannot have two type comments on def") }
 invalid_with_item:
-    | expression 'as' a=expression &(',' | ')' | ':') {
+    | expression ('as' | 'как') a=expression &(',' | ')' | ':') {
         RAISE_SYNTAX_ERROR_INVALID_TARGET(STAR_TARGETS, a) }
 
 invalid_for_target:
-    | ASYNC? 'for' a=star_expressions {
+    | ASYNC? ('for' | 'для') a=star_expressions {
         RAISE_SYNTAX_ERROR_INVALID_TARGET(FOR_TARGETS, a) }
 
 invalid_group:
@@ -1239,7 +1239,7 @@ invalid_group:
     | '(' a='**' expression ')' {
         RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use double starred expression here") }
 invalid_import:
-    | a='import' dotted_name 'from' dotted_name {
+    | a=('import' | 'импортировать' | 'импорт') dotted_name ('from' | 'из') dotted_name {
         RAISE_SYNTAX_ERROR_STARTING_FROM(a, "Did you mean to use 'from ... import ...' instead?") }
  
 invalid_import_from_targets:
@@ -1247,49 +1247,49 @@ invalid_import_from_targets:
         RAISE_SYNTAX_ERROR("trailing comma not allowed without surrounding parentheses") }
 
 invalid_with_stmt:
-    | [ASYNC] 'with' ','.(expression ['as' star_target])+ NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | [ASYNC] 'with' '(' ','.(expressions ['as' star_target])+ ','? ')' NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | [ASYNC] ('with' | 'с') ','.(expression [('as' | 'как') star_target])+ NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | [ASYNC] ('with' | 'с') '(' ','.(expressions [('as' | 'как') star_target])+ ','? ')' NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
 invalid_with_stmt_indent:
-    | [ASYNC] a='with' ','.(expression ['as' star_target])+ ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'with' statement on line %d", a->lineno) }
-    | [ASYNC] a='with' '(' ','.(expressions ['as' star_target])+ ','? ')' ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'with' statement on line %d", a->lineno) }
+    | [ASYNC] a=('with' | 'с') ','.(expression [('as' | 'как') star_target])+ ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('with' | 'с') statement on line %d", a->lineno) }
+    | [ASYNC] a=('with' | 'с') '(' ','.(expressions [('as' | 'как') star_target])+ ','? ')' ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('with' | 'с') statement on line %d", a->lineno) }
 
 invalid_try_stmt:
-    | a='try' ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'try' statement on line %d", a->lineno) }
-    | 'try' ':' block !('except' | 'finally') { RAISE_SYNTAX_ERROR("expected 'except' or 'finally' block") }
-    | 'try' ':' block* except_block+ a='except' b='*' expression ['as' NAME] ':' {
-        RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot have both 'except' and 'except*' on the same 'try'") }
-    | 'try' ':' block* except_star_block+ a='except' [expression ['as' NAME]] ':' {
-        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot have both 'except' and 'except*' on the same 'try'") }
+    | a=('try' | 'попробовать') ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('try' | 'попробовать') statement on line %d", a->lineno) }
+    | ('try' | 'попробовать') ':' block !(('except' | 'однако') | ('finally' | 'наконец')) { RAISE_SYNTAX_ERROR("expected ('except' | 'однако') or ('finally' | 'наконец') block") }
+    | ('try' | 'попробовать') ':' block* except_block+ a=('except' | 'однако') b='*' expression [('as' | 'как') NAME] ':' {
+        RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "cannot have both ('except' | 'однако') and 'except*' on the same ('try' | 'попробовать')") }
+    | ('try' | 'попробовать') ':' block* except_star_block+ a=('except' | 'однако') [expression [('as' | 'как') NAME]] ':' {
+        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot have both ('except' | 'однако') and 'except*' on the same ('try' | 'попробовать')") }
 invalid_except_stmt:
-    | 'except' '*'? a=expression ',' expressions ['as' NAME ] ':' {
+    | ('except' | 'однако') '*'? a=expression ',' expressions [('as' | 'как') NAME ] ':' {
         RAISE_SYNTAX_ERROR_STARTING_FROM(a, "multiple exception types must be parenthesized") }
-    | a='except' '*'? expression ['as' NAME ] NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='except' NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='except' '*' (NEWLINE | ':') { RAISE_SYNTAX_ERROR("expected one or more exception types") }
+    | a=('except' | 'однако') '*'? expression [('as' | 'как') NAME ] NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('except' | 'однако') NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('except' | 'однако') '*' (NEWLINE | ':') { RAISE_SYNTAX_ERROR("expected one or more exception types") }
 invalid_finally_stmt:
-    | a='finally' ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'finally' statement on line %d", a->lineno) }
+    | a=('finally' | 'наконец') ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('finally' | 'наконец') statement on line %d", a->lineno) }
 invalid_except_stmt_indent:
-    | a='except' expression ['as' NAME ] ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'except' statement on line %d", a->lineno) }
-    | a='except' ':' NEWLINE !INDENT { RAISE_INDENTATION_ERROR("expected an indented block after 'except' statement on line %d", a->lineno) }
+    | a=('except' | 'однако') expression [('as' | 'как') NAME ] ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('except' | 'однако') statement on line %d", a->lineno) }
+    | a=('except' | 'однако') ':' NEWLINE !INDENT { RAISE_INDENTATION_ERROR("expected an indented block after ('except' | 'однако') statement on line %d", a->lineno) }
 invalid_except_star_stmt_indent:
-    | a='except' '*' expression ['as' NAME ] ':' NEWLINE !INDENT {
+    | a=('except' | 'однако') '*' expression [('as' | 'как') NAME ] ':' NEWLINE !INDENT {
         RAISE_INDENTATION_ERROR("expected an indented block after 'except*' statement on line %d", a->lineno) }
 invalid_match_stmt:
-    | "match" subject_expr NEWLINE { CHECK_VERSION(void*, 10, "Pattern matching is", RAISE_SYNTAX_ERROR("expected ':'") ) }
-    | a="match" subject=subject_expr ':' NEWLINE !INDENT {
+    | ("match" | "соотнести") subject_expr NEWLINE { CHECK_VERSION(void*, 10, "Pattern matching is", RAISE_SYNTAX_ERROR("expected ':'") ) }
+    | a=("match" | "соотнести") subject=subject_expr ':' NEWLINE !INDENT {
         RAISE_INDENTATION_ERROR("expected an indented block after 'match' statement on line %d", a->lineno) }
 invalid_case_block:
-    | "case" patterns guard? NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a="case" patterns guard? ':' NEWLINE !INDENT {
+    | ("case" | "случай") patterns guard? NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=("case" | "случай") patterns guard? ':' NEWLINE !INDENT {
         RAISE_INDENTATION_ERROR("expected an indented block after 'case' statement on line %d", a->lineno) }
 invalid_as_pattern:
-    | or_pattern 'as' a="_" { RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use '_' as a target") }
-    | or_pattern 'as' !NAME a=expression { RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "invalid pattern target") }
+    | or_pattern ('as' | 'как') a="_" { RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "cannot use '_' as a target") }
+    | or_pattern ('as' | 'как') !NAME a=expression { RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "invalid pattern target") }
 invalid_class_pattern:
     | name_or_attr '(' a=invalid_class_argument_pattern  { RAISE_SYNTAX_ERROR_KNOWN_RANGE(
         PyPegen_first_item(a, pattern_ty),
@@ -1298,30 +1298,30 @@ invalid_class_pattern:
 invalid_class_argument_pattern[asdl_pattern_seq*]:
     | [positional_patterns ','] keyword_patterns ',' a=positional_patterns { a }
 invalid_if_stmt:
-    | 'if' named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='if' a=named_expression ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'if' statement on line %d", a->lineno) }
+    | ('if' | 'если') named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('if' | 'если') a=named_expression ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('if' | 'если') statement on line %d", a->lineno) }
 invalid_elif_stmt:
-    | 'elif' named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='elif' named_expression ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'elif' statement on line %d", a->lineno) }
+    | ('elif' | 'инесли') named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('elif' | 'инесли') named_expression ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('elif' | 'инесли') statement on line %d", a->lineno) }
 invalid_else_stmt:
-    | a='else' ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'else' statement on line %d", a->lineno) }
+    | a=('else' | 'иначе') ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('else' | 'иначе') statement on line %d", a->lineno) }
 invalid_while_stmt:
-    | 'while' named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='while' named_expression ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'while' statement on line %d", a->lineno) }
+    | ('while' | 'пока') named_expression NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('while' | 'пока') named_expression ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('while' | 'пока') statement on line %d", a->lineno) }
 invalid_for_stmt:
-    | [ASYNC] 'for' star_targets 'in' star_expressions NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | [ASYNC] a='for' star_targets 'in' star_expressions ':' NEWLINE !INDENT {
-        RAISE_INDENTATION_ERROR("expected an indented block after 'for' statement on line %d", a->lineno) }
+    | [ASYNC] ('for' | 'для') star_targets ('in' | 'в') star_expressions NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | [ASYNC] a=('for' | 'для') star_targets ('in' | 'в') star_expressions ':' NEWLINE !INDENT {
+        RAISE_INDENTATION_ERROR("expected an indented block after ('for' | 'для') statement on line %d", a->lineno) }
 invalid_def_raw:
-    | [ASYNC] a='def' NAME '(' [params] ')' ['->' expression] ':' NEWLINE !INDENT {
+    | [ASYNC] a=('def' | 'опр' | 'зад') NAME '(' [params] ')' ['->' expression] ':' NEWLINE !INDENT {
         RAISE_INDENTATION_ERROR("expected an indented block after function definition on line %d", a->lineno) }
 invalid_class_def_raw:
-    | 'class' NAME ['(' [arguments] ')'] NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
-    | a='class' NAME ['(' [arguments] ')'] ':' NEWLINE !INDENT {
+    | ('class' | 'класс') NAME ['(' [arguments] ')'] NEWLINE { RAISE_SYNTAX_ERROR("expected ':'") }
+    | a=('class' | 'класс') NAME ['(' [arguments] ')'] ':' NEWLINE !INDENT {
         RAISE_INDENTATION_ERROR("expected an indented block after class definition on line %d", a->lineno) }
 
 invalid_double_starred_kvpairs:

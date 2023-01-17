@@ -164,16 +164,24 @@ _add_methods_to_object(PyObject *module, PyObject *name, PyMethodDef *functions)
             PyErr_SetString(PyExc_ValueError,
                             "module functions cannot set"
                             " METH_CLASS or METH_STATIC");
+            fprintf(stdout, "%s\n", fdef->ml_name);
             return -1;
         }
         func = PyCFunction_NewEx(fdef, (PyObject*)module, name);
         if (func == NULL) {
             return -1;
         }
+
         if (PyObject_SetAttrString(module, fdef->ml_name, func) != 0) {
             Py_DECREF(func);
             return -1;
         }
+
+        // if (strcmp(fdef->ml_name, "print") == 0) {
+        //     int res = PyObject_SetAttrString(module, "вывести", func);
+        //     fprintf(stdout, "print alias result: %i\n", res);
+        // }
+
         Py_DECREF(func);
     }
 
