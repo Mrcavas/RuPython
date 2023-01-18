@@ -211,8 +211,8 @@ class InteractiveConsole(InteractiveInterpreter):
             sys.ps2 = "... "
         cprt = 'Type "help", "copyright", "credits" or "license" for more information.'
         if banner is None:
-            self.write("Python %s on %s\n%s\n(%s)\n" %
-                       (sys.version, sys.platform, cprt,
+            self.write("RuPython %s (Python %s) on %s\n%s\n(%s)\n" %
+                       (sys.ruversion, sys.version, sys.platform, cprt,
                         self.__class__.__name__))
         elif banner:
             self.write("%s\n" % str(banner))

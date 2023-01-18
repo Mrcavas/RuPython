@@ -2908,8 +2908,52 @@ make_version_info(PyThreadState *tstate)
     return version_info;
 }
 
+
+static PyObject *
+make_ru_version_info(PyThreadState *tstate)
+{
+    PyObject *version_info;
+    char *s;
+    int pos = 0;
+
+    version_info = PyStructSequence_New(&VersionInfoType);
+    if (version_info == NULL) {
+        return NULL;
+    }
+
+#if RU_RELEASE_LEVEL == PY_RELEASE_LEVEL_ALPHA
+    s = "alpha";
+#elif RU_RELEASE_LEVEL == PY_RELEASE_LEVEL_BETA
+    s = "beta";
+#elif RU_RELEASE_LEVEL == PY_RELEASE_LEVEL_GAMMA
+    s = "candidate";
+#elif RU_RELEASE_LEVEL == PY_RELEASE_LEVEL_FINAL
+    s = "final";
+#endif
+
+#define SetIntItem(flag) \
+    PyStructSequence_SET_ITEM(version_info, pos++, PyLong_FromLong(flag))
+#define SetStrItem(flag) \
+    PyStructSequence_SET_ITEM(version_info, pos++, PyUnicode_FromString(flag))
+
+    SetIntItem(RU_MAJOR_VERSION);
+    SetIntItem(RU_MINOR_VERSION);
+    SetIntItem(RU_MICRO_VERSION);
+    SetStrItem(s);
+    SetIntItem(RU_RELEASE_SERIAL);
+#undef SetIntItem
+#undef SetStrItem
+
+    if (_PyErr_Occurred(tstate)) {
+        Py_CLEAR(version_info);
+        return NULL;
+    }
+    return version_info;
+}
+
+
 /* sys.implementation values */
-#define NAME "cpython"
+#define NAME "rupython"
 const char *_PySys_ImplName = NAME;
 #define MAJOR Py_STRINGIFY(PY_MAJOR_VERSION)
 #define MINOR Py_STRINGIFY(PY_MINOR_VERSION)
@@ -2921,7 +2965,7 @@ const char *_PySys_ImplCacheTag = TAG;
 #undef TAG
 
 static PyObject *
-make_impl_info(PyObject *version_info)
+make_impl_info(PyObject *version_info, PyObject *ru_version_info)
 {
     int res;
     PyObject *impl_info, *value, *ns;
@@ -2949,6 +2993,10 @@ make_impl_info(PyObject *version_info)
         goto error;
 
     res = PyDict_SetItemString(impl_info, "version", version_info);
+    if (res < 0)
+        goto error;
+        
+    res = PyDict_SetItemString(impl_info, "ruversion", ru_version_info);
     if (res < 0)
         goto error;
 
@@ -3117,7 +3165,7 @@ static struct PyModuleDef sysmodule = {
 static PyStatus
 _PySys_InitCore(PyThreadState *tstate, PyObject *sysdict)
 {
-    PyObject *version_info;
+    PyObject *version_info, *ru_version_info;
     int res;
 
     /* stdin/stdout/stderr are set in pylifecycle.c */
@@ -3180,10 +3228,12 @@ _PySys_InitCore(PyThreadState *tstate, PyObject *sysdict)
     /* version_info */
     ENSURE_INFO_TYPE(VersionInfoType, version_info_desc);
     version_info = make_version_info(tstate);
+    ru_version_info = make_ru_version_info(tstate);
     SET_SYS("version_info", version_info);
+    SET_SYS("ru_version_info", ru_version_info);
 
     /* implementation */
-    SET_SYS("implementation", make_impl_info(version_info));
+    SET_SYS("implementation", make_impl_info(version_info, ru_version_info));
 
     // sys.flags: updated in-place later by _PySys_UpdateConfig()
     ENSURE_INFO_TYPE(FlagsType, flags_desc);

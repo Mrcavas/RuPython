@@ -132,6 +132,8 @@ Tools/unicode/data/
 /python.bat
 /python-gdb.py
 /python.exe-gdb.py
+/test.py
+/test.rpy
 /reflog.txt
 /coverage/
 /externals/

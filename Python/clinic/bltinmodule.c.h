@@ -1032,6 +1032,7 @@ PyDoc_STRVAR(builtin_print__doc__,
 "print($module, /, *args, sep=\' \', end=\'\\n\', file=None, flush=False)\n"
 "--\n"
 "\n"
+"TEEEEEST"
 "Prints the values to a stream, or to sys.stdout by default.\n"
 "\n"
 "  sep\n"

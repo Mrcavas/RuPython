@@ -2969,6 +2969,8 @@ static PyObject * ru_test(PyObject *module) {
     Py_RETURN_NONE;
 }
 
+#define METHODS_SIZE
+
 static PyMethodDef builtin_methods[] = {
     {"__build_class__", _PyCFunction_CAST(builtin___build_class__),
      METH_FASTCALL | METH_KEYWORDS, build_class_doc},
@@ -3015,7 +3017,6 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_SORTED_METHODDEF
     BUILTIN_SUM_METHODDEF
     BUILTIN_VARS_METHODDEF
-    {"тест", _PyCFunction_CAST(ru_test), METH_NOARGS, rutest_doc},
     {NULL,              NULL},
 };
 
@@ -3026,11 +3027,49 @@ typedef struct {
     const char **aliases;
 } Substitution;
 
-#define NUM_SUBS 3
+#define NUM_SUBS 46
 
 static Substitution substitutions[] = {
-    {"print", Aliases("вывести")},
-    {"all", Aliases("все", "всё")},
+    {"abs", Aliases("модуль")},
+    {"all", Aliases("все")},
+    {"any", Aliases("любое")},
+    {"bin", Aliases("двоич")},
+    {"callable", Aliases("вызываемое")},
+    {"chr", Aliases("символ")},
+    {"compile", Aliases("скомпилировать")},
+    {"delattr", Aliases("удаттр")},
+    {"dir", Aliases("аттр")},
+    {"divmod", Aliases("делмод", "делост")},
+    {"eval", Aliases("испол")},
+    {"exec", Aliases("выпол")},
+    {"format", Aliases("формат")},
+    {"getattr", Aliases("полаттр")},
+    {"globals", Aliases("глпеременные")},
+    {"hasattr", Aliases("иматтр")},
+    {"hash", Aliases("хэш")},
+    {"hex", Aliases("шесн")},
+    {"id", Aliases("ид", "айди")},
+    {"input", Aliases("спросить", "ввод")},
+    {"isinstance", Aliases("явлэкземпляр")},
+    {"issubclass", Aliases("явлподкласс")},
+    {"iter", Aliases("итер")},
+    {"aiter", Aliases("аитер")},
+    {"len", Aliases("длина")},
+    {"locals", Aliases("локпеременные")},
+    {"max", Aliases("макс")},
+    {"min", Aliases("мин")},
+    {"next", Aliases("след")},
+    {"anext", Aliases("аслед")},
+    {"oct", Aliases("восьм")},
+    {"ord", Aliases("номерсимв")},
+    {"pow", Aliases("степ", "степень")},
+    {"print", Aliases("вывести", "вывод")},
+    {"repr", Aliases("предст")},
+    {"round", Aliases("окр", "округлить")},
+    {"setattr", Aliases("устаттр")},
+    {"sorted", Aliases("отсорт")},
+    {"sum", Aliases("сумма")},
+    {"vars", Aliases("перем")},
     {NULL, { NULL }}
 };
 
@@ -3041,7 +3080,6 @@ PyDoc_STRVAR(builtin_doc,
 Noteworthy: None is the `nil' object; Ellipsis represents `...' in slices.");
 
 static PyMethodDef *createSubstitutions(PyMethodDef *methods) {
-    setlocale();
     PyMethodDef *subs = malloc(sizeof(PyMethodDef) * NUM_SUBS);
     int sub_i = 0;
     int methods_size = 0;
@@ -3054,27 +3092,17 @@ static PyMethodDef *createSubstitutions(PyMethodDef *methods) {
                     memcpy(sub, fdef, sizeof(PyMethodDef));
                     sub->ml_name = substitutions[i].aliases[j];
                     sub_i++;
-                    printf("sub %s\n", sub->ml_name);
                 }
             }
         }
         methods_size++;
     }
 
-    // PyMethodDef *new_methods = malloc(sizeof(PyMethodDef) * (methods_size + NUM_SUBS));
-    // memcpy(new_methods, subs, sizeof(PyMethodDef) * NUM_SUBS);
-    // memcpy(&new_methods[NUM_SUBS], methods, sizeof(PyMethodDef) * methods_size);
+    PyMethodDef *new_methods = malloc(sizeof(PyMethodDef) * (methods_size + 1 + NUM_SUBS));
+    memcpy(new_methods, subs, sizeof(PyMethodDef) * NUM_SUBS);
+    memcpy(&new_methods[NUM_SUBS], methods, sizeof(PyMethodDef) * (methods_size + 1));
 
-    // for (PyMethodDef *fdef = subs; fdef->ml_name != NULL; fdef++) {
-    //     fprintf(stdout, "subs: %s\n", fdef->ml_name);
-    // }
-
-    // for (PyMethodDef *fdef = new_methods; fdef->ml_name != NULL; fdef++) {
-    //     fprintf(stdout, "new: %s\n", fdef->ml_name);
-    // }
-
-    // return new_methods;
-    return methods;
+    return new_methods;
 }
 
 static struct PyModuleDef builtinsmodule = {
@@ -3121,37 +3149,47 @@ _PyBuiltin_Init(PyInterpreterState *interp)
         return NULL;                                                    \
     ADD_TO_ALL(OBJECT)
 
-    SETBUILTIN("None",                  Py_None);
-    SETBUILTIN("Ellipsis",              Py_Ellipsis);
-    SETBUILTIN("NotImplemented",        Py_NotImplemented);
-    SETBUILTIN("False",                 Py_False);
-    SETBUILTIN("True",                  Py_True);
-    SETBUILTIN("bool",                  &PyBool_Type);
-    SETBUILTIN("memoryview",        &PyMemoryView_Type);
-    SETBUILTIN("bytearray",             &PyByteArray_Type);
-    SETBUILTIN("bytes",                 &PyBytes_Type);
-    SETBUILTIN("classmethod",           &PyClassMethod_Type);
-    SETBUILTIN("complex",               &PyComplex_Type);
-    SETBUILTIN("dict",                  &PyDict_Type);
-    SETBUILTIN("enumerate",             &PyEnum_Type);
-    SETBUILTIN("filter",                &PyFilter_Type);
-    SETBUILTIN("float",                 &PyFloat_Type);
-    SETBUILTIN("frozenset",             &PyFrozenSet_Type);
-    SETBUILTIN("property",              &PyProperty_Type);
-    SETBUILTIN("int",                   &PyLong_Type);
-    SETBUILTIN("list",                  &PyList_Type);
-    SETBUILTIN("map",                   &PyMap_Type);
-    SETBUILTIN("object",                &PyBaseObject_Type);
-    SETBUILTIN("range",                 &PyRange_Type);
-    SETBUILTIN("reversed",              &PyReversed_Type);
-    SETBUILTIN("set",                   &PySet_Type);
-    SETBUILTIN("slice",                 &PySlice_Type);
-    SETBUILTIN("staticmethod",          &PyStaticMethod_Type);
-    SETBUILTIN("str",                   &PyUnicode_Type);
-    SETBUILTIN("super",                 &PySuper_Type);
-    SETBUILTIN("tuple",                 &PyTuple_Type);
-    SETBUILTIN("type",                  &PyType_Type);
-    SETBUILTIN("zip",                   &PyZip_Type);
+#define SETBUILTINS(NAME1, NAME2, OBJECT) \
+    SETBUILTIN(NAME1, OBJECT);            \
+    SETBUILTIN(NAME2, OBJECT);
+
+#define SETBUILTINS2(NAME1, NAME2, NAME3, OBJECT) \
+    SETBUILTIN(NAME1, OBJECT);            \
+    SETBUILTIN(NAME2, OBJECT);            \
+    SETBUILTIN(NAME3, OBJECT);
+
+
+    SETBUILTINS("None", "Ничего",                               Py_None);
+    SETBUILTINS("Ellipsis", "Элипсис",                          Py_Ellipsis);
+    SETBUILTINS("NotImplemented", "НеИмплементированно",        Py_NotImplemented);
+    SETBUILTINS2("False", "Ложь", "Неправда",                   Py_False);
+    SETBUILTINS2("True", "Истина", "Правда",                    Py_True);
+    SETBUILTINS2("bool", "бул", "логич",                        &PyBool_Type);
+    SETBUILTINS("memoryview", "смданные",                       &PyMemoryView_Type);
+    SETBUILTINS("bytearray", "байтсписок",                      &PyByteArray_Type);
+    SETBUILTINS("bytes", "байты",                               &PyBytes_Type);
+    SETBUILTINS("classmethod", "классметод",                    &PyClassMethod_Type);
+    SETBUILTINS("complex", "комплексное",                       &PyComplex_Type);
+    SETBUILTINS("dict", "словарь",                              &PyDict_Type);
+    SETBUILTINS("enumerate", "пронумеровать",                   &PyEnum_Type);
+    SETBUILTINS2("filter", "отфильтр", "отфильтровать",         &PyFilter_Type);
+    SETBUILTINS("float", "дробное",                             &PyFloat_Type);
+    SETBUILTINS("frozenset", "заморожмнож",                     &PyFrozenSet_Type);
+    SETBUILTINS("property", "свойство",                         &PyProperty_Type);
+    SETBUILTINS("int", "целое",                                 &PyLong_Type);
+    SETBUILTINS("list", "список",                               &PyList_Type);
+    SETBUILTINS("map", "преобр",                                &PyMap_Type);
+    SETBUILTINS("object", "объект",                             &PyBaseObject_Type);
+    SETBUILTINS("range", "диап",                                &PyRange_Type);
+    SETBUILTINS("reversed", "наоборот",                         &PyReversed_Type);
+    SETBUILTINS("set", "множ",                                  &PySet_Type);
+    SETBUILTINS("slice", "срез",                                &PySlice_Type);
+    SETBUILTINS("staticmethod", "статметод",                    &PyStaticMethod_Type);
+    SETBUILTINS("str", "стр",                                   &PyUnicode_Type);
+    SETBUILTINS("super", "супер",                               &PySuper_Type);
+    SETBUILTINS("tuple", "кортеж",                              &PyTuple_Type);
+    SETBUILTINS("type", "тип",                                  &PyType_Type);
+    SETBUILTINS2("zip", "пак", "запак",                         &PyZip_Type);
     debug = PyBool_FromLong(config->optimization_level == 0);
     if (PyDict_SetItemString(dict, "__debug__", debug) < 0) {
         Py_DECREF(debug);
