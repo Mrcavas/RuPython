@@ -3052,8 +3052,8 @@ static Substitution substitutions[] = {
     {"input", Aliases("спросить", "ввод")},
     {"isinstance", Aliases("явлэкземпляр")},
     {"issubclass", Aliases("явлподкласс")},
-    {"iter", Aliases("итер")},
-    {"aiter", Aliases("аитер")},
+    {"iter", Aliases("переч")},
+    {"aiter", Aliases("апереч")},
     {"len", Aliases("длина")},
     {"locals", Aliases("локпеременные")},
     {"max", Aliases("макс")},
@@ -3161,7 +3161,7 @@ _PyBuiltin_Init(PyInterpreterState *interp)
 
     SETBUILTINS("None", "Ничего",                               Py_None);
     SETBUILTINS("Ellipsis", "Элипсис",                          Py_Ellipsis);
-    SETBUILTINS("NotImplemented", "НеИмплементированно",        Py_NotImplemented);
+    SETBUILTINS("NotImplemented", "НеРеализовано",              Py_NotImplemented);
     SETBUILTINS2("False", "Ложь", "Неправда",                   Py_False);
     SETBUILTINS2("True", "Истина", "Правда",                    Py_True);
     SETBUILTINS2("bool", "бул", "логич",                        &PyBool_Type);
